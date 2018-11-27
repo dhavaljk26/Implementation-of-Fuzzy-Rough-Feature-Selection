@@ -1,19 +1,19 @@
 
 # coding: utf-8
 
-# In[209]:
+# In[1]:
 
 
 #Import Libraries 
 
 import numpy as np
-import skfuzzy as fuzz
 import math
 import pandas as pd
 from sklearn.model_selection import train_test_split
+import time
 
 
-# In[210]:
+# In[2]:
 
 
 #Calculate  Łukasiewicz t_norm and  Łukasiewicz fuzzy_implicator, as given in 
@@ -28,7 +28,7 @@ def fuzzy_implicator(x, y):
     return min(1.0-x+y, 1.0)
 
 
-# In[211]:
+# In[3]:
 
 
 #Calculate fuzzy similarity measure for a particular attribute, as given in 
@@ -55,7 +55,7 @@ def attribute_fuzzy_similarity_measure(arr):
     return arr_2
 
 
-# In[212]:
+# In[4]:
 
 
 #Calculate fuzzy similarity measure for a dataset for all attributes
@@ -70,7 +70,7 @@ def fuzzy_similatity_measure(data):
     return fsm
 
 
-# In[213]:
+# In[5]:
 
 
 #Calculate equivalence classes based on decision features
@@ -88,7 +88,7 @@ def equivalence_class(data, decision_features):
     return E
 
 
-# In[214]:
+# In[6]:
 
 
 #Check if element is present in a set
@@ -100,7 +100,7 @@ def present_in_set(s, element):
         return 0
 
 
-# In[215]:
+# In[7]:
 
 
 # Calculate dependency measure of conditional features on data based on equivalence classes
@@ -143,7 +143,7 @@ def dependency_measurement(data, conditional_features_set, equivalence_class, fs
         return np.sum(mu)/mu.size
 
 
-# In[216]:
+# In[8]:
 
 
 # Fuzzy-Rough Quick Reduct as given in paper
@@ -194,7 +194,7 @@ def fuzzy_rough_quick_reduct(data, conditional_features, decision_features, mode
         
 
 
-# In[217]:
+# In[9]:
 
 
 #Example dataset given in paper (for testing)
@@ -208,7 +208,7 @@ example_data = np.array([
         ])
 
 
-# In[218]:
+# In[10]:
 
 
 # Preprocessing
@@ -224,16 +224,20 @@ data = data.dropna()
 data_matrix = data.values
 
 
-# In[219]:
+# In[11]:
 
 
 # Calculate reduct set of attributes
 
-reduct = fuzzy_rough_quick_reduct(data_matrix, np.arange(data_matrix.shape[1]-1), np.array([data_matrix.shape[1]-1]), 'boundary')
-print(reduct)
+start_time_reduction = time.time()
+
+reduct = fuzzy_rough_quick_reduct(data_matrix, np.arange(data_matrix.shape[1]-1), np.array([data_matrix.shape[1]-1]))
+print('Time = {0}'.format(time.time() - start_time_reduction))
+
+print('Reduct set: ',reduct)
 
 
-# In[406]:
+# In[12]:
 
 
 # Measure accuracy by comparing values of predicted and original values
@@ -248,7 +252,7 @@ def measure_accuracy(pred, orig):
     return accuracy
 
 
-# In[407]:
+# In[13]:
 
 
 # Classification using classifier parameter on whole dataset and dataset with reduct set of attributes
@@ -264,10 +268,10 @@ def measure_classification_accuracy(classifier, data, reduct):
     if classifier == 'DecisionTree':
         from sklearn.tree import DecisionTreeClassifier 
 
-        dtree_model = DecisionTreeClassifier(max_depth = 20).fit(c_train, d_train) 
+        dtree_model = DecisionTreeClassifier().fit(c_train, d_train) 
         dtree_predictions = dtree_model.predict(c_test)
 
-        rdtree_model = DecisionTreeClassifier(max_depth = 100).fit(rc_train, d_train) 
+        rdtree_model = DecisionTreeClassifier().fit(rc_train, d_train) 
         rdtree_predictions = rdtree_model.predict(rc_test)
 
         return measure_accuracy(dtree_predictions, d_test), measure_accuracy(rdtree_predictions, d_test)
@@ -336,10 +340,26 @@ def measure_classification_accuracy(classifier, data, reduct):
     
 
 
-# In[411]:
+# In[14]:
 
 
+original_accuracy, reduct_accuracy = measure_classification_accuracy('SVM', data_matrix, reduct)
+print ("All attributes accuracy    = ",original_accuracy, "\nReduct attributes accuracy = ",reduct_accuracy)
 
-all_accuracy, reduct_accuracy = measure_classification_accuracy('RandomForest', data_matrix, reduct)
-print ("All attributes accuracy    = ",all_accuracy, "\nReduct attributes accuracy = ",reduct_accuracy)
+
+# In[137]:
+
+
+a = 0.0
+b = 0.0;
+
+for i in range(0,10):
+    all_accuracy, reduct_accuracy = measure_classification_accuracy('GaussianNaiveBayes', data_matrix, reduct)
+    a+=all_accuracy
+    b+=reduct_accuracy
+
+a*=10.0
+b*=10.0
+
+print (a,b)
 
